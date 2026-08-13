@@ -46,7 +46,12 @@ class SerialService extends EventEmitter {
 
   // ── List available serial ports ──────────────────────────
   async listPorts() {
-    return SerialPort.list();
+    try {
+      return await SerialPort.list();
+    } catch (e) {
+      console.warn('[Serial] Hardware port scan not supported on this host environment:', e.message);
+      return [];
+    }
   }
 
   // ── Connect to a Bluetooth COM port ─────────────────────
