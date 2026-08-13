@@ -20,6 +20,7 @@ const { EventEmitter } = require('events');
 const { SerialPort }   = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 const { commands, parseLine } = require('../protocol/commands');
+const MockArduino = require('./mockArduino');
 
 const TIMEOUT_MS     = parseInt(process.env.COMMAND_TIMEOUT_MS  || '2000',  10);
 const MAX_RETRIES    = parseInt(process.env.MAX_RETRY_ATTEMPTS   || '3',     10);
@@ -38,6 +39,7 @@ class SerialService extends EventEmitter {
     this._retryCount = 0;
     this._retryTimer = null;
     this._reconnecting = false;
+    this.mockBoard   = null;   // MockArduino instance
   }
 
   isConnected() { return this._connected; }
@@ -55,6 +57,20 @@ class SerialService extends EventEmitter {
     this.currentPort  = portPath;
     this._retryCount  = 0;
     this._reconnecting = false;
+
+    if (portPath === 'MOCK_PORT') {
+      this.mockBoard = new MockArduino();
+      this._connected = true;
+      
+      // Simulate physical Arduino connection process asynchronously
+      setTimeout(() => {
+        this.emit('connected', { port: portPath });
+        this._postConnectSync().catch(console.error);
+      }, 300);
+      
+      return { ok: true, port: portPath };
+    }
+
     return this._openPort(portPath);
   }
 
@@ -145,6 +161,7 @@ class SerialService extends EventEmitter {
     this._reconnecting = false;
     this._connected    = false;
     this._drainQueue('DISCONNECTED');
+    this.mockBoard     = null;
     return new Promise((resolve) => {
       if (this.port && this.port.isOpen) {
         this.port.close(() => resolve());
@@ -199,6 +216,23 @@ class SerialService extends EventEmitter {
 
   // ── Send command and wait for one non-LIST response ─────
   _sendRaw(cmd) {
+    if (this.currentPort === 'MOCK_PORT' && this.mockBoard) {
+      this.emit('log', { direction: '>', line: cmd });
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const respLine = this.mockBoard.handleCommand(cmd);
+          this.emit('log', { direction: '<', line: respLine });
+          const parsed = parseLine(respLine);
+          
+          // Emit events like the real parser to trigger WS broadcast updates
+          if (parsed.type === 'STATUS') {
+            this.emit('status', { data: parsed.data });
+          }
+          resolve(parsed);
+        }, 50);
+      });
+    }
+
     return new Promise((resolve, reject) => {
       const entry = { cmd, resolve, reject, timer: null };
 
@@ -221,6 +255,24 @@ class SerialService extends EventEmitter {
 
   // ── Send command and wait for LIST accumulation ──────────
   _sendList(cmd) {
+    if (this.currentPort === 'MOCK_PORT' && this.mockBoard) {
+      this.emit('log', { direction: '>', line: cmd });
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const respList = this.mockBoard.handleCommand(cmd); // returns array of strings
+          const items = [];
+          respList.forEach(line => {
+            this.emit('log', { direction: '<', line });
+            const parsed = parseLine(line);
+            if (parsed.type === 'LIST_ITEM') {
+              items.push({ id: parsed.id, text: parsed.text });
+            }
+          });
+          resolve(items);
+        }, 50);
+      });
+    }
+
     return new Promise((resolve, reject) => {
       this._listBuf = [];
 

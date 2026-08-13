@@ -65,6 +65,10 @@ export function useBoardState() {
 
     ws.on('status', (e) => {
       boardStatus.value = e.data as BoardStatus;
+      if (e.data && typeof (e.data as BoardStatus).active === 'number') {
+        const active = (e.data as BoardStatus).active;
+        activeMessageId.value = active === 0 ? null : active;
+      }
     });
 
     ws.on('messages', (e) => {

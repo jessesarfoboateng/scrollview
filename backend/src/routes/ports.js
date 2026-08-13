@@ -10,7 +10,12 @@ const { serialService } = require('../services/serialService');
  */
 router.get('/', async (req, res) => {
   try {
-    const ports = await serialService.listPorts();
+    const list = await serialService.listPorts();
+    // Always append a virtual mock port for hardwareless testing
+    const ports = [
+      { path: 'MOCK_PORT', manufacturer: 'Emulator (Virtual Board)' },
+      ...list
+    ];
     res.json({ ok: true, ports });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });

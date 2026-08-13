@@ -7,7 +7,7 @@
       </div>
       <div class="flex gap-2">
         <button class="btn btn-secondary btn-sm" :disabled="!connected || loading" @click="refresh">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg :class="{ 'spin': loading }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
@@ -45,8 +45,17 @@
         <div class="message-id">{{ msg.id }}</div>
         <div class="message-text" :title="msg.text">{{ msg.text }}</div>
         <div class="message-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" :disabled="!connected" title="Display this message" @click="show(msg.id)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <button
+            class="btn btn-ghost btn-icon btn-sm"
+            :disabled="!connected"
+            :title="state.activeMessageId.value === msg.id ? 'Stop displaying this message' : 'Display this message'"
+            :style="{ color: state.activeMessageId.value === msg.id ? 'var(--color-blue)' : 'inherit' }"
+            @click="state.activeMessageId.value === msg.id ? show(0) : show(msg.id)"
+          >
+            <svg v-if="state.activeMessageId.value === msg.id" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+            </svg>
+            <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
           </button>
@@ -278,3 +287,12 @@ watch(connected, (val) => {
   if (val) refresh();
 });
 </script>
+
+<style scoped>
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+</style>

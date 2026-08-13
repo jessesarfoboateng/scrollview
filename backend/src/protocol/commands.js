@@ -44,7 +44,7 @@ function validateText(text) {
 
 function validateId(id) {
   const n = parseInt(id, 10);
-  if (isNaN(n) || n < 1) return { valid: false, error: 'INVALID_ID' };
+  if (isNaN(n) || n < 0) return { valid: false, error: 'INVALID_ID' };
   return { valid: true, id: n };
 }
 

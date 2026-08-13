@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
   app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       title: 'ScrollView — LED Notice Board Controller',
       meta: [
@@ -29,7 +30,7 @@ export default defineNuxtConfig({
         },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap',
         },
       ],
     },

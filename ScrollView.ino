@@ -584,9 +584,15 @@ void handleCommand(char* line) {
   // ── SHOW|<id> ───────────────────────────────────────────
   if (strcmp(cmd, "SHOW") == 0) {
     if (tokCount < 2) { sendBT("ERROR|INVALID_COMMAND"); return; }
-    uint8_t seq = (uint8_t)atoi(tokens[1]);
+    int16_t seq = atoi(tokens[1]);
+    if (seq == 0) {
+      activeIdx = -1;
+      rebuildScrollBuf();
+      sendBT("OK|SHOW|0");
+      return;
+    }
     if (seq < 1) { sendBT("ERROR|INVALID_ID"); return; }
-    int8_t slot = findActiveBySeq(seq);
+    int8_t slot = findActiveBySeq((uint8_t)seq);
     if (slot < 0) { sendBT("ERROR|INVALID_ID"); return; }
     activeIdx = slot;
     rebuildScrollBuf();

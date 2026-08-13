@@ -17,16 +17,19 @@
     <div class="form-group" style="margin-bottom:0.875rem;">
       <label class="form-label">Serial Port</label>
       <div class="flex gap-2">
-        <select
-          v-model="selectedPort"
-          class="form-input form-select"
-          :disabled="state.connectionStatus.value === 'connected' || loadingPorts"
-        >
-          <option value="" disabled>{{ loadingPorts ? 'Loading ports…' : 'Select a COM port' }}</option>
-          <option v-for="p in ports" :key="p.path" :value="p.path">
-            {{ p.path }}{{ p.manufacturer ? ` — ${p.manufacturer}` : '' }}
-          </option>
-        </select>
+        <div style="flex:1; position:relative;">
+          <select
+            v-model="selectedPort"
+            class="form-input form-select"
+            :disabled="loadingPorts"
+            @mousedown="checkSwitch"
+          >
+            <option value="" disabled>{{ loadingPorts ? 'Loading ports…' : 'Select a COM port' }}</option>
+            <option v-for="p in ports" :key="p.path" :value="p.path">
+              {{ p.path }}{{ p.manufacturer ? ` — ${p.manufacturer}` : '' }}
+            </option>
+          </select>
+        </div>
         <button
           v-if="state.connectionStatus.value !== 'connected'"
           class="btn btn-primary"
@@ -48,10 +51,16 @@
       </div>
     </div>
 
+    <!-- Switch Tip Notice -->
+    <div v-if="state.connectionStatus.value === 'connected' && showSwitchTip" 
+         style="margin-bottom: 0.875rem; padding: 0.625rem 0.75rem; background: var(--color-blue-bg); border: 1px solid var(--color-blue); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--color-blue); line-height: 1.4;">
+      💡 <strong>Want to switch ports?</strong> Please click the <strong>Disconnect</strong> button first before choosing another COM port.
+    </div>
+
     <!-- Status bar -->
     <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0.75rem;background:var(--color-bg);border-radius:var(--radius-sm);border:1px solid var(--color-border);">
       <span class="status-dot" :class="state.connectionStatus.value">{{ statusLabel }}</span>
-      <span v-if="errorMsg" style="font-size:0.8rem;color:var(--color-red);margin-left:auto;">{{ errorMsg }}</span>
+      <span v-if="errorMsg" style="font-size:0.8rem;color:var(--color-red);margin-left:auto;font-weight: 500;">⚠️ {{ errorMsg }}</span>
     </div>
 
     <!-- Hint when disconnected -->
@@ -74,6 +83,17 @@ const loadingPorts = ref(false);
 const connecting   = ref(false);
 const disconnecting= ref(false);
 const errorMsg     = ref('');
+const showSwitchTip = ref(false);
+
+function checkSwitch(event: MouseEvent) {
+  if (state.connectionStatus.value === 'connected') {
+    event.preventDefault(); // prevent dropdown from opening
+    showSwitchTip.value = true;
+    setTimeout(() => {
+      showSwitchTip.value = false;
+    }, 4500);
+  }
+}
 
 const statusLabel = computed(() => {
   switch (state.connectionStatus.value) {

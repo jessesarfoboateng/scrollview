@@ -30,7 +30,7 @@
       <!-- Nav -->
       <span class="sidebar-section-label">Control</span>
       <nav class="sidebar-nav">
-        <button class="sidebar-nav-item" :class="{ active: activeSection === 'dashboard' }" @click="setSection('dashboard')">
+        <NuxtLink to="/" class="sidebar-nav-item" active-class="active" @click="sidebarOpen = false">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7" rx="1"/>
             <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -38,27 +38,27 @@
             <rect x="14" y="14" width="7" height="7" rx="1"/>
           </svg>
           Dashboard
-        </button>
-        <button class="sidebar-nav-item" :class="{ active: activeSection === 'messages' }" @click="setSection('messages')">
+        </NuxtLink>
+        <NuxtLink to="/messages" class="sidebar-nav-item" active-class="active" @click="sidebarOpen = false">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           Messages
           <span v-if="state.messages.value.length" class="badge badge-neutral" style="margin-left:auto;font-size:0.7rem;padding:0.1em 0.5em;">{{ state.messages.value.length }}</span>
-        </button>
-        <button class="sidebar-nav-item" :class="{ active: activeSection === 'controls' }" @click="setSection('controls')">
+        </NuxtLink>
+        <NuxtLink to="/controls" class="sidebar-nav-item" active-class="active" @click="sidebarOpen = false">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
             <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
           </svg>
           Display Controls
-        </button>
-        <button class="sidebar-nav-item" :class="{ active: activeSection === 'monitor' }" @click="setSection('monitor')">
+        </NuxtLink>
+        <NuxtLink to="/monitor" class="sidebar-nav-item" active-class="active" @click="sidebarOpen = false">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
           </svg>
           Serial Monitor
-        </button>
+        </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
@@ -100,9 +100,7 @@
 
 <script setup lang="ts">
 const state = useBoardState();
-
-const sidebarOpen   = ref(false);
-const activeSection = ref('dashboard');
+const sidebarOpen = ref(false);
 
 const statusLabel = computed(() => {
   switch (state.connectionStatus.value) {
@@ -112,15 +110,10 @@ const statusLabel = computed(() => {
   }
 });
 
-function setSection(s: string) {
-  activeSection.value = s;
-  sidebarOpen.value   = false;
-  // Navigate to section anchor
-  nextTick(() => {
-    const el = document.getElementById(`section-${s}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-}
+const route = useRoute();
+watch(() => route.path, () => {
+  sidebarOpen.value = false;
+});
 
 onMounted(() => {
   state.init();
